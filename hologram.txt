@@ -1,0 +1,54 @@
+from PIL import Image
+import ST7735
+import time
+import RPi.GPIO as GPIO
+
+print("""
+gif.py - Display a gif on the LCD.
+
+If you're using Breakout Garden, plug the 0.96" LCD (SPI)
+breakout into the front slot.
+""")
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+CS_PIN = [17,27,22,5]
+
+GPIO.setup(CS_PIN, GPIO.OUT)
+
+image_file = "top.gif"
+
+# Create TFT LCD display class
+disp = ST7735.ST7735(port=0, cs=0, dc=24, backlight=23, rst=25, width=128, height=160, rotation=90, offset_top =-27, invert=False)
+
+# Initialize display.
+disp.begin()
+
+width = disp.width
+height = disp.height
+
+# Load an image.
+print('Loading gif: {}...'.format(image_file))
+image = Image.open(image_file)
+
+print('Drawing gif, press Ctrl+C to exit!')
+
+frame = 0
+
+while True:
+    try:
+        image.seek(frame)
+        GPIO.output(CS_PIN, GPIO.LOW)
+        disp.display(image.resize((width, height)))
+        GPIO.output(CS_PIN, GPIO.HIGH)
+        frame += 1
+        time.sleep(0.02)
+
+    except EOFError:
+        frame = 0
+    except KeyboardInterrupt:
+        GPIO.output(CS_PIN, GPIO.LOW)
+        GPIO.cleanup()
+        exit(-1)        
+
+
+
